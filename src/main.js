@@ -59,6 +59,36 @@ global.perfSeek = function () {
   }, 200)
 }
 global.Perf = Perf
+// Diagnóstico rápido no console da página: `animachineDiag()`
+global.animachineDiag = function () {
+  const out = {
+    url: location.href,
+    inited: !!global.__animachineInited,
+    gsap: typeof window.TweenMax !== 'undefined',
+    editor: typeof window.BETON !== 'undefined',
+  }
+  try {
+    const pm = BETON.require('project-manager')
+    out.project = !!pm.state.currentProject
+    out.timeline = pm.state.currentTimeline ? pm.state.currentTimeline.name : null
+    out.tracks = pm.state.currentTimeline ? pm.state.currentTimeline.tracks.getLength() : 0
+    out.trackParams = pm.state.currentTimeline && pm.state.currentTrack
+      ? pm.state.currentTrack.params.map(p => p.name)
+      : []
+  }
+  catch (e) {
+    out.error = e.message
+  }
+  try {
+    const node = BETON.require('dom-picker').state.pickedDOMNode
+    out.picked = node ? (node.id || node.tagName) : null
+  }
+  catch (e) {
+    out.pickedError = e.message
+  }
+  console.log('[animachine] diag', out)
+  return out
+}
 global.PPP = (function () {
   let data = {}
   return {

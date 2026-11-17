@@ -111,11 +111,24 @@ O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai:
 * Extensão Chrome MV2 do repo original está morta — o bookmarklet substitui.
 * `content-script.js` original aponta para `rawgit.com` (extinto).
 * O demo publicado (`gh-pages`, `#/Robots`) referencia uma cena que não existe no `master`.
-* Ícones usam Font Awesome via CDN (incluído na página de teste).
-* `Transform` precisa de validação com mouse real (automação headless gera keys, mas com valores ~0).
+* O editor depende de Font Awesome para os ícones; a extensão embute a fonte, o bookmarklet carrega
+  do CDN. Em site com CSS agressivo, algum ícone pode herdar estilo errado.
+* `Transform` funciona com arrasto real (verificado: `x=200.37`, `y=100.19`), mas precisa de uma
+  **track com alvo** — a track vazia do placeholder não serve.
+
+## Troubleshooting da extensão
+
+| Sintoma | Causa | Solução |
+|---|---|---|
+| Nenhum ícone aparece (setas, ×, +) | página sem Font Awesome | já embutido na extensão; **recarregue a extensão** e dê **F5 na página** |
+| Cliquei no elemento e não achei o "+" | é a **bolinha ciano no centro** do contorno pontilhado | clique nela; ela cria a track com o seletor CSS |
+| Criei "Create an empty track" e nada funciona | track vazia não tem alvo: sem alvo não há transform tool nem keys | use elemento + `+`; a track vazia pode ser apagada |
+| Não arrasta o elemento | precisa de track com alvo; arraste pelo **corpo** (longe da borda) | crie a track pelo `+` e arraste do meio do elemento |
+| Depois de eu mexer no código | a extensão em memória é a antiga | `chrome://extensions` → **Reload** na extensão → **F5** na página |
+| Qualquer outra coisa | — | no console da página rode `animachineDiag()` e me mande o objeto |
 
 ## Próximos passos possíveis
 
-1. Verificar/corrigir o transform drag (transhand) e o editor de ease.
+1. Editor de ease (inline na keyline) — validar e documentar.
 2. Abrir o `.am.js` de volta além do `.am.json` (formato do bundle é JS, não JSON).
 3. Empacotar como script de dev (`<script>` em projeto próprio) com versionamento dos patches.

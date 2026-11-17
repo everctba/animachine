@@ -203,12 +203,27 @@ export default class DomPicker extends React.Component {
           () => setPickedDOMNode(null),
           {right: `-${buttonSize}px`, top: `-${buttonSize}px`, margin: [0, 0]}
         )}
-        {renderButton(
-          'plus',
-          'create a new track with this node',
-          () => this.addNewTrack(node),
-          {},
-          !this.selector()
+        {this.selector() && (
+          <div
+            role = 'button'
+            title = 'create a new track with this node'
+            onClick = {() => this.addNewTrack(node)}
+            style = {{
+              width: 26,
+              height: 26,
+              borderRadius: '50%',
+              background: '#6bb6c4',
+              color: '#10222a',
+              fontSize: 18,
+              fontWeight: 700,
+              lineHeight: '26px',
+              textAlign: 'center',
+              pointerEvents: 'auto',
+              cursor: 'pointer',
+              userSelect: 'none',
+              boxShadow: '0 2px 6px rgba(0,0,0,.35)',
+            }}
+          >+</div>
         )}
       </div>
     </div>

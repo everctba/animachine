@@ -2,6 +2,16 @@
 const RUNNABLE = /^(https?|file):/i
 
 async function inject(tabId) {
+  // Ícones do editor (o site não tem Font Awesome). insertCSS é privilegiado: CSP da página não bloqueia.
+  try {
+    await chrome.scripting.insertCSS({
+      target: {tabId},
+      files: ['vendor/font-awesome/css/font-awesome.min.css'],
+    })
+  }
+  catch (e) {
+    console.warn('animachine: nao consegui injetar Font Awesome', e)
+  }
   // GSAP primeiro (o editor usa TimelineMax/TweenMax globais).
   await chrome.scripting.executeScript({
     target: {tabId},
