@@ -39,6 +39,7 @@ module.exports = {
   plugins: [
     new webpack.DefinePlugin({
       SKIP_AUTO_INIT_ANIMACHINE: false,
+      __BUILD_STAMP__: JSON.stringify(new Date().toISOString()),
     })
   ],
 }

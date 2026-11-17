@@ -87,16 +87,29 @@ export default class DomPicker extends React.Component {
       if (!state.currentTimeline) {
         throw new Error('nenhuma timeline ativa')
       }
-      const before = state.currentTimeline.tracks.getLength()
-      const track = state.currentTimeline.addTrack({
+      const timeline = state.currentTimeline
+      const before = timeline.tracks.getLength()
+      const track = timeline.addTrack({
         name: `new track for "${query}"`,
         selectors: [{selectorType: 'css', query}],
       })
-      state.currentTimeline.currentTrack = track
-      const after = state.currentTimeline.tracks.getLength()
-      console.log('[animachine] track criada', {query, antes: before, depois: after})
+      timeline.currentTrack = track
+      const after = timeline.tracks.getLength()
+      const targets = track.targets.length
+      console.log('[animachine] track criada', {query, antes: before, depois: after, alvos: targets})
       if (after <= before) {
         throw new Error('a track nao foi adicionada a timeline')
+      }
+      if (!targets) {
+        showProblem(`track criada, mas o seletor nao encontrou elemento: ${query}`)
+      }
+      else {
+        // o contact-layer pode zerar currentTrack no mesmo clique; reafirma logo depois
+        setTimeout(() => {
+          if (timeline.currentTrack == null) {
+            timeline.currentTrack = track
+          }
+        }, 50)
       }
       setPickedDOMNode(null)
     }

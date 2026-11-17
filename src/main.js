@@ -9,6 +9,7 @@ function init() {
   global.__animachineInited = true
 
   console.log('INIT ANIMACHINE')
+  console.log('[animachine] build', typeof __BUILD_STAMP__ !== 'undefined' ? __BUILD_STAMP__ : 'dev')
   require('./beton')
   require('./rocks/dom-picker')
   require('./rocks/config')
@@ -62,6 +63,7 @@ global.Perf = Perf
 // Diagnóstico rápido no console da página: `animachineDiag()`
 global.animachineDiag = function () {
   const out = {
+    build: typeof __BUILD_STAMP__ !== 'undefined' ? __BUILD_STAMP__ : 'dev',
     url: location.href,
     inited: !!global.__animachineInited,
     gsap: typeof window.TweenMax !== 'undefined',
@@ -73,6 +75,9 @@ global.animachineDiag = function () {
     out.project = !!pm.state.currentProject
     out.timeline = pm.state.currentTimeline ? pm.state.currentTimeline.name : null
     out.tracks = pm.state.currentTimeline ? pm.state.currentTimeline.tracks.getLength() : 0
+    out.trackTargets = pm.state.currentTimeline && pm.state.currentTrack
+      ? pm.state.currentTrack.targets.length
+      : 0
     out.trackParams = pm.state.currentTimeline && pm.state.currentTrack
       ? pm.state.currentTrack.params.map(p => p.name)
       : []
