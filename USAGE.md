@@ -124,6 +124,7 @@ O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai:
 | Cliquei no elemento e não achei o "+" | é a **bolinha ciano no centro** do contorno pontilhado | clique nela; ela cria a track com o seletor CSS |
 | Criei "Create an empty track" e nada funciona | track vazia não tem alvo: sem alvo não há transform tool nem keys | use elemento + `+`; a track vazia pode ser apagada |
 | Não arrasta o elemento | precisa de track com alvo; arraste pelo **corpo** (longe da borda) | crie a track pelo `+` e arraste do meio do elemento |
+| O picker não pega o elemento (iframe, shadow DOM, overlay) | o `elementFromPoint` não atravessa essas barreiras | menu (círculo, à direita da timeline) → **add track (css selector)** → digite o seletor |
 | Depois de eu mexer no código | a extensão em memória é a antiga | `chrome://extensions` → **Reload** na extensão → **F5** na página |
 | Qualquer outra coisa | — | no console da página rode `animachineDiag()` e me mande o objeto |
 
