@@ -1,0 +1,14 @@
+animachine (original work)
+  Copyright (c) 2015 Polgár András
+  MIT — https://github.com/animachine/animachine
+
+Manifest V3 port and modifications
+  Copyright (c) 2026 contributors of this repository
+  MIT — see LICENSE
+
+Bundled third-party assets (used by the editor at runtime)
+  Font Awesome 4.6.3 — SIL Open Font License 1.1
+  GSAP (TweenMax) 1.20 — GreenSock standard "no charge" license (free for all since 2025)
+
+No proprietary Adobe / Animate / Flash material is included. Animate is referenced only
+nominatively in documentation.
