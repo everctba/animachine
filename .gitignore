@@ -7,3 +7,4 @@ dist
 *.pem
 .publish
 browser
+local-test/animachine.js
