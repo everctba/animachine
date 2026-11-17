@@ -3,11 +3,11 @@ const RUNNABLE = /^(https?|file):/i
 
 let faCssPromise
 
-// O Font Awesome vem embutido na extensÃ£o. Dois detalhes importantes:
-//  1) insertCSS({files}) resolve URLs relativas contra a PÃGINA (gerava 404 em
-//     https://site/fonts/...), entÃ£o trocamos por URLs absolutas chrome-extension://;
-//  2) usamos uma famÃ­lia de fonte prÃ³pria ("animachine-fa") para o CSS do site
-//     nÃ£o sobrescrever/canibalizar os Ã­cones do editor.
+// O Font Awesome vem embutido na extensão. Dois detalhes importantes:
+//  1) insertCSS({files}) resolve URLs relativas contra a PÁGINA (gerava 404 em
+//     https://site/fonts/...), então trocamos por URLs absolutas chrome-extension://;
+//  2) usamos uma família de fonte própria ("animachine-fa") para o CSS do site
+//     não sobrescrever/canibalizar os ícones do editor.
 async function buildFontAwesomeCss() {
   if (!faCssPromise) {
     faCssPromise = (async () => {
