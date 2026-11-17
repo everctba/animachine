@@ -13,7 +13,7 @@
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
     {
-      "resources": ["vendor/font-awesome/fonts/*"],
+      "resources": ["font-awesome/fonts/*"],
       "matches": ["<all_urls>"]
     }
   ]
