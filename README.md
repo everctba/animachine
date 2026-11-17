@@ -49,6 +49,33 @@ Then:
 
 Clicking twice is harmless (the editor initializes once).
 
+## Install from the release (no build, no Node.js)
+
+If you just want to use the editor, grab the packaged zip from the
+[**Releases**](../../releases) page:
+
+1. download `animachine-mv3-v0.4.0.zip`;
+2. extract it (Windows: right-click → **Extract All**). You get a folder **`animachine-mv3/`**;
+3. open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** and select that
+   extracted `animachine-mv3/` folder;
+4. open any page and click the **animachine** toolbar icon.
+
+Verify the download (optional):
+
+```powershell
+Get-FileHash .\animachine-mv3-v0.4.0.zip -Algorithm SHA256
+# fdb0e241834904fe8e580f3f390b5b02d292b3582e88312a6d6e3063bc0ab9dc
+```
+
+To build a new release zip from source:
+
+```powershell
+.\scripts\package-extension.ps1        # builds and writes dist\animachine-mv3-v<version>.zip
+```
+
+The zip contains a single `animachine-mv3/` folder with forward-slash paths, so it extracts
+correctly on Windows, macOS and Linux.
+
 ## Usage
 
 1. Click the toolbar icon → dialog **Hello!** → **start**.
