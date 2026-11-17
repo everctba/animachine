@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>animachine — página de teste local</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.0/TweenMax.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.7.0/lodash.min.js"></script>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f4f6f8; }
+    h1 { margin: 0; padding: 24px; }
+    .row { display: flex; gap: 16px; padding: 0 24px; }
+    .card { width: 160px; height: 110px; border-radius: 12px; background: #fff;
+            border: 2px solid #cfd8dc; box-shadow: 0 2px 6px #0001; }
+    .card:nth-child(1) { background: #ffe0b2; }
+    .card:nth-child(2) { background: #b3e5fc; }
+    .card:nth-child(3) { background: #c8e6c9; }
+    .hint { padding: 0 24px; color: #78909c; font-size: 14px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <h1 id="title">Página de teste do animachine</h1>
+  <div class="row" id="row">
+    <div class="card" id="card-1"></div>
+    <div class="card" id="card-2"></div>
+    <div class="card" id="card-3"></div>
+  </div>
+  <p class="hint">
+    <strong>start</strong> → clique num card → no contorno pontilhado, clique no <strong>+</strong>
+    (cria a track) → arraste o card para criar keyframes → no menu do topo da timeline
+    (círculo à direita) estão <em>save file</em>, <em>save/open project</em>, undo/redo.
+  </p>
+  <script src="animachine.js"></script>
+</body>
+</html>

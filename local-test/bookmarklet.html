@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>animachine — instalar bookmarklet</title>
+  <style>
+    body { margin: 0; padding: 40px; font-family: system-ui, sans-serif; background: #262a2e; color: #e8ecef; }
+    h1 { font-size: 22px; font-weight: 500; }
+    p { color: #aab4bc; line-height: 1.6; max-width: 720px; }
+    .bm {
+      display: inline-block; margin: 18px 0; padding: 12px 18px; border-radius: 8px;
+      background: linear-gradient(135deg, #6bb6c4, #6b9ad3); color: #10222a;
+      font-weight: 700; text-decoration: none; font-size: 16px;
+    }
+    code { background: #1b1f23; padding: 2px 6px; border-radius: 4px; color: #cfe3ea; }
+    ol { color: #aab4bc; line-height: 1.9; max-width: 720px; }
+  </style>
+</head>
+<body>
+  <h1>animachine — bookmarklet</h1>
+  <p>
+    Arraste o botão abaixo para a sua barra de favoritos (ou clique com o botão direito →
+    "Adicionar aos favoritos" e cole o endereço). Depois abra sua página servida em
+    <code>http://localhost</code> e clique no favorito: o editor aparece por cima da página.
+  </p>
+
+  <a class="bm" id="bm"
+     href="javascript:(function(){function l(u,cb){var s=document.createElement('script');s.src=u;s.onload=cb;document.head.appendChild(s)};l('https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.0/TweenMax.min.js',function(){l('http://127.0.0.1:8091/animachine.js')})})()">
+    animachine
+  </a>
+
+  <ol>
+    <li>Deixe <code>run-local.ps1</code> rodando (porta 8091).</li>
+    <li>Abra sua página em <code>http://localhost:xxxx</code>.</li>
+    <li>Clique no favorito <strong>animachine</strong>.</li>
+    <li>No diálogo Hello, clique <strong>start</strong> e siga o fluxo do <code>USAGE.md</code>.</li>
+  </ol>
+
+  <p>
+    Se a página for HTTPS, o navegador pode bloquear o script vindo de <code>http://127.0.0.1</code>.
+    Nesse caso, edite com a página servida localmente em HTTP.
+  </p>
+</body>
+</html>
