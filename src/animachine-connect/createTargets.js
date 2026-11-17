@@ -6,7 +6,13 @@ export default function(rootTarget, selector) {
     }
     else {
       try {
-        return [...rootTarget.querySelectorAll(selector.query)]
+        // seletores relativos ("> :nth-child(3)") são inválidos em querySelectorAll;
+        // ancoramos no próprio rootTarget com :scope (funciona em projetos antigos)
+        let query = selector.query
+        if (query.charAt(0) === '>') {
+          query = ':scope ' + query
+        }
+        return [...rootTarget.querySelectorAll(query)]
       }
       catch (e) {
         console.warn(`error on using css selector  "${selector.query}"`)

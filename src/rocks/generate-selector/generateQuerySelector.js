@@ -25,7 +25,7 @@ function generate(de, root) {
 
             if (deCurr.parentNode === rootCurr) {
 
-                qsCurr = '> :nth-child(' +
+                qsCurr = ':scope > :nth-child(' +
                     (Array.prototype.indexOf.call(rootCurr.children, deCurr) + 1) + ')'
             }
             else {
