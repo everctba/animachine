@@ -1,10 +1,12 @@
 let inited = false
 
 function init() {
-  if (inited) {
+  // idempotente tambem entre injecoes (extensao clicada duas vezes)
+  if (inited || global.__animachineInited) {
     return
   }
   inited = true
+  global.__animachineInited = true
 
   console.log('INIT ANIMACHINE')
   require('./beton')

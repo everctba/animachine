@@ -8,3 +8,5 @@ dist
 .publish
 browser
 local-test/animachine.js
+extension/animachine.js
+extension/vendor/

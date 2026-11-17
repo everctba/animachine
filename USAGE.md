@@ -31,7 +31,44 @@ cd H:\TUDO\Codigo\Codigo\animachine
 3. Abra sua página (de preferência servida em `http://localhost`) e clique no favorito.
    - O bookmarklet carrega GSAP 1.18 do CDN e `animachine.js` de `127.0.0.1:8091`.
    - Em página **HTTPS**, o carregamento de `http://127.0.0.1` pode ser bloqueado pelo navegador;
-     nesse caso edite com a página servida localmente (http).
+     nesse caso edite com a página servida localmente (http) ou use a extensão abaixo.
+
+## Usar em qualquer site — extensão MV3 (recomendado)
+
+O repo original tinha extensão Chrome **MV2** (morta). Este clone agora tem uma extensão **MV3**
+própria, com o editor e o GSAP **embutidos** — sem CDN, sem servidor local, sem mixed content,
+e sem sofrer com o CSP da página.
+
+```powershell
+.\build-extension.ps1     # compila e monta extension/ (animachine.js + gsap.min.js)
+```
+
+Depois:
+
+1. Abra `chrome://extensions` e ligue o **Developer mode**.
+2. **Load unpacked** → selecione `H:\TUDO\Codigo\Codigo\animachine\extension`.
+3. Fixe o ícone "animachine (local)" na barra de ferramentas (puzzle → pin).
+4. Abra **qualquer site** (http, https ou file) e clique no ícone.
+
+Como funciona: [extension/background.js](extension/background.js) injeta `vendor/gsap.min.js` e
+`animachine.js` no **main world** da aba (`chrome.scripting.executeScript`, `world: 'MAIN'`).
+Clicar duas vezes é inofensivo (guard `__animachineInited` da [src/main.js](src/main.js)).
+
+Notas de verificação:
+
+* o **payload** (animachine.js em world MAIN) foi validado numa página crua, sem editor embutido:
+  o diálogo "Hello!" aparece e o guard de dupla injeção funciona;
+* o **clique no ícone** não pôde ser automatizado: Chrome 157 (branded) ignora `--load-extension`
+  por linha de comando, então o carregamento é manual (Load unpacked);
+* páginas `chrome://`, Chrome Web Store e PDFs internos não aceitam injeção.
+
+## Para produção (no site publicado)
+
+O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai:
+
+* o arquivo `.am.js` exportado (bundle UMD com o projeto e as timelines), com GSAP carregado antes;
+* um disparador: `animachine-connect` (decorator React) ou, em HTML puro, o global do bundle
+  (`window['<nome do projeto>']['<timeline>'](document.body)`) — ponto a validar/embrulhar.
 
 ## Fluxo verificado (o que o landing page promete)
 
@@ -48,7 +85,7 @@ cd H:\TUDO\Codigo\Codigo\animachine
 
 | Feature | Status | Evidência |
 |---|---|---|
-| **In browser** | ✅ | bundle roda sobre qualquer página; servidor local |
+| **In browser** | ✅ | bookmarklet (localhost) e extensão MV3 (qualquer site) |
 | **DOM picker** | ✅ | gera seletor CSS e cria track (`#card-1`) |
 | **Transform** | ⚠️ | tool renderiza e cria params+keys; valores de x/y ficaram ~0 na automação (validar com mouse real) |
 | **Ease** | ⚠️ | editor inline de easing existe na keyline; não testado |
@@ -65,8 +102,9 @@ cd H:\TUDO\Codigo\Codigo\animachine
 | `src/rocks/dom-picker/DOMPicker.jsx` | botões do picker **sempre visíveis** (antes só no hover) |
 | `src/rocks/timeline-tab/controls/Controls.jsx` | hint "click an element… press +"; botão "Create an empty track" |
 | `src/rocks/project-file/index.js` | **novo**: salvar/abrir projeto `.am.json` (toolbar) |
-| `src/main.js` | registra `project-file` |
-| `local-test/`, `run-local.ps1`, `shots/` | página de teste, servidor e capturas |
+| `src/main.js` | registra `project-file`; guard `__animachineInited` (injeção dupla é inofensiva) |
+| `extension/` + `build-extension.ps1` | **novo**: extensão MV3 com GSAP + editor embutidos |
+| `local-test/` (inclui `plain.html`, `bookmarklet.html`) | página de teste, página crua e bookmarklet |
 
 ## Limitações conhecidas
 
