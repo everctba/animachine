@@ -8,9 +8,8 @@ export default function createMountNode() {
   de.style.pointerEvents = 'none'
 
   var zIndex = getMaxZIndex()
-  if (zIndex) {
-      de.style.zIndex = zIndex + 1000
-  }
+  // fica acima de qualquer coisa do site (overlays fixos, modais, cookie banners)
+  de.style.zIndex = String(Math.min(2147483647, Math.max(zIndex + 1000, 2147483000)))
 
   document.body.appendChild(de)
 

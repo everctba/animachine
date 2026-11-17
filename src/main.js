@@ -66,6 +66,7 @@ global.animachineDiag = function () {
     inited: !!global.__animachineInited,
     gsap: typeof window.TweenMax !== 'undefined',
     editor: typeof window.BETON !== 'undefined',
+    lastError: global.__animachineLastError || null,
   }
   try {
     const pm = BETON.require('project-manager')

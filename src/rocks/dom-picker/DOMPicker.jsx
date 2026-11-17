@@ -4,6 +4,23 @@ import state from './state'
 import {setPickedDOMNode} from './actions'
 import {Button} from 'react-matterkit'
 
+// Erro visível na página (não depende do console) e guardado para o animachineDiag()
+function showProblem(message) {
+  global.__animachineLastError = message
+  try {
+    const el = document.createElement('div')
+    el.textContent = message
+    el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);' +
+      'z-index:2147483647;background:#b3261e;color:#fff;font:13px/1.4 system-ui,sans-serif;' +
+      'padding:10px 14px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.4);pointer-events:none'
+    document.body.appendChild(el)
+    setTimeout(() => {
+      try { el.parentNode.removeChild(el) } catch (e) {}
+    }, 8000)
+  }
+  catch (e) {}
+}
+
 @afflatus
 export default class DomPicker extends React.Component {
   static propTypes = {
@@ -32,9 +49,23 @@ export default class DomPicker extends React.Component {
       const generateSelector = BETON.require('generate-selector')
       const node = state.pickedDOMNode
       const selector = node && generateSelector({node})
-      console.log({selector})
       return selector
     })
+
+    // Cria a track no mousedown (antes do contact-layer limpar a selecao) e sem
+    // depender do estado global: usa o no/seletor capturados no momento do pick.
+    this.handleAddTrack = (e) => {
+      if (e) {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+      if (this._addingTrack) {
+        return
+      }
+      this._addingTrack = true
+      setTimeout(() => { this._addingTrack = false }, 500)
+      this.addNewTrack()
+    }
   }
 
   handleMouseEnter = (e) => {
@@ -45,15 +76,34 @@ export default class DomPicker extends React.Component {
     // this.setState({hover: false})
   }
 
-  addNewTrack(node) {
+  addNewTrack() {
+    const node = this._cachedNode
+    const query = this._cachedQuery
     const {state} = BETON.require('project-manager')
-    const query = this.selector()
-    const track = state.currentTimeline.addTrack({
-      name: `new track for "${query}"`,
-      selectors: [{type: 'css', query}],
-    })
-    state.currentTimeline.currentTrack = track
-    setPickedDOMNode(null)
+    try {
+      if (!node || !query) {
+        throw new Error('nenhum elemento selecionado')
+      }
+      if (!state.currentTimeline) {
+        throw new Error('nenhuma timeline ativa')
+      }
+      const before = state.currentTimeline.tracks.getLength()
+      const track = state.currentTimeline.addTrack({
+        name: `new track for "${query}"`,
+        selectors: [{selectorType: 'css', query}],
+      })
+      state.currentTimeline.currentTrack = track
+      const after = state.currentTimeline.tracks.getLength()
+      console.log('[animachine] track criada', {query, antes: before, depois: after})
+      if (after <= before) {
+        throw new Error('a track nao foi adicionada a timeline')
+      }
+      setPickedDOMNode(null)
+    }
+    catch (e) {
+      console.error('[animachine] nao consegui criar a track', e)
+      showProblem('animachine: ' + e.message)
+    }
   }
 
   getRect() {
@@ -90,6 +140,13 @@ export default class DomPicker extends React.Component {
   render() {
     const node = state.pickedDOMNode
     const {onChange, buttonSize, borderSize} = this.props
+
+    // captura o no e o seletor no momento do pick: o clique no "+" não pode
+    // depender de o estado global ainda estar preenchido
+    if (node && this._cachedNode !== node) {
+      this._cachedNode = node
+      this._cachedQuery = this.selector()
+    }
 
     if (!node) {
       return <div hidden/>
@@ -207,7 +264,8 @@ export default class DomPicker extends React.Component {
           <div
             role = 'button'
             title = 'create a new track with this node'
-            onClick = {() => this.addNewTrack(node)}
+            onMouseDown = {this.handleAddTrack}
+            onClick = {this.handleAddTrack}
             style = {{
               width: 26,
               height: 26,
