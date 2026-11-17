@@ -25,8 +25,11 @@ function generate(de, root) {
 
             if (deCurr.parentNode === rootCurr) {
 
-                qsCurr = ':scope > :nth-child(' +
+                // `:scope` só é válido no INÍCIO do seletor; no meio da corrente
+                // (depois de um ancestral) o trecho relativo é `> :nth-child(n)`.
+                var nth = ':nth-child(' +
                     (Array.prototype.indexOf.call(rootCurr.children, deCurr) + 1) + ')'
+                qsCurr = qsParent ? '> ' + nth : ':scope > ' + nth
             }
             else {
                 return //can't find unique query selector
