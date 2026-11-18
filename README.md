@@ -1,4 +1,4 @@
-# animachine — Manifest V3 port
+# Animachine — Manifest V3 port
 
 A Chrome **Manifest V3** port of [animachine](https://github.com/animachine/animachine): a visual
 GSAP timeline editor that runs **inside any web page**, lets you pick DOM elements with CSS
