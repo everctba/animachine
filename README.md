@@ -4,7 +4,13 @@ A Chrome **Manifest V3** port of [animachine](https://github.com/animachine/anim
 GSAP timeline editor that runs **inside any web page**, lets you pick DOM elements with CSS
 selectors and animate them with a timeline — then export a `.am.js` GSAP bundle for your site.
 
-![editor with the green transform box over a page element](docs/img/editor-caixa-verde.png)
+<picture>
+  <source srcset="docs/img/demo.avif" type="image/avif">
+  <img src="docs/img/demo-poster.png" alt="animachine demo: picking a page element, creating a track with the + button and animating it with keyframes on the timeline" width="880">
+</picture>
+
+*Demo (animated AVIF). If it shows as a still image, open [`docs/img/demo.avif`](docs/img/demo.avif)
+in a browser to watch the animation.*
 
 > **Unofficial port.** animachine was created by **Polgár András** ([@azazdeaz](https://github.com/azazdeaz))
 > and published as MIT in 2016 — original project: <https://github.com/animachine/animachine>.
