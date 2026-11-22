@@ -1,5 +1,9 @@
 # Using an exported animation in another page
 
+> **Rule of thumb:** `.am.js` is the production animation; `.am.json` is the editable project.
+> An animation "belongs" to the selectors of the page where it was made — to move it to another site,
+> make sure those selectors exist there (or recreate the tracks with stable selectors).
+
 This folder is a **runnable example**: `demo.am.js` is an animation exported from the editor
 (MV3 port 0.4.1) and `index.html` plays it with GSAP in a plain page — no editor, no build.
 

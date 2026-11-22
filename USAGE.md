@@ -64,6 +64,10 @@ Notas de verificação:
 
 ## Usando a animação exportada (GSAP) — em outro site
 
+> **Regra prática:** `.am.js` = **animação para produção**; `.am.json` = **projeto editável**. A
+> animação "pertence" aos seletores da página onde foi criada — portar para outro site = garantir que
+> os seletores existam lá (ou recriar as tracks com seletores estáveis).
+
 O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai é o `.am.js`: um
 bundle UMD autocontido que embute os dados do projeto e o runtime que remonta um `TimelineMax`.
 

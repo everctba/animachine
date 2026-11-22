@@ -104,6 +104,10 @@ Full notes (setup details, troubleshooting, known issues): [`USAGE.md`](USAGE.md
 
 ## Using the exported animation (GSAP)
 
+> **Rule of thumb:** `.am.js` is the **production animation**; `.am.json` is the **editable project**.
+> An animation "belongs" to the selectors of the page where it was made — to move it to another site,
+> make sure those selectors exist there (or recreate the tracks with stable selectors).
+
 The exported `*.am.js` is a self-contained UMD bundle: it embeds the project data plus the runtime
 that rebuilds a GSAP `TimelineMax` from the timeline tracks. It does **not** need the editor.
 
