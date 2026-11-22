@@ -52,35 +52,523 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
-	eval("\"use strict\";\n\nvar createAnimationSource = __webpack_require__(1);\n\n//TODO: remove in prod\nvar test = [{ \"a\": { \"b\": \"foo\" } }, 4];\nvar projectSource = 'PLACEHOLDER_PROJECT_SOURCE';\n\nvar loadProjectPromise;\nfunction loadProject() {\n  if (!loadProjectPromise) {\n    loadProjectPromise = new Promise(function (resolve) {\n      var intervalID = setInterval(function () {\n        if (typeof window.__animachineLoadProject === 'function') {\n          clearInterval(intervalID);\n          var project = window.__animachineLoadProject(projectSource);\n          resolve(project);\n        }\n      }, 100);\n    });\n  }\n  return loadProjectPromise;\n}\n\nvar timelineSources = 'PLACEHOLDER_TIMELINE_SOURCES';\nvar animations = {};\n\ntimelineSources.forEach(function (timelineSource, index) {\n  var gsapSource = createAnimationSource(timelineSource,\n  //TODO remove in prod\n  function (rootTarget, gsapAnimation) {\n    loadProject().then(function (project) {\n      project.timelines.find(function (timeline) {\n        return timeline.name === timelineSource.name;\n      }).registerPreview(rootTarget, gsapAnimation);\n    });\n  });\n  animations[timelineSource.name] = gsapSource;\n});\n\nmodule.exports = animations;\n\n/*****************\n ** WEBPACK FOOTER\n ** ./src/rocks/create-bundle-file/bundle.template.js\n ** module id = 0\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/rocks/create-bundle-file/bundle.template.js?");
+	'use strict';
 
-/***/ },
+	var createAnimationSource = __webpack_require__(1);
+
+	// Dados do projeto injetados no export (ver src/rocks/create-bundle-file/index.js).
+	// Sem `eval` no bundle: o JSON entra como literal e é válido mesmo com aspas.
+	var projectSource = 'PLACEHOLDER_PROJECT_SOURCE';
+	var timelineSources = 'PLACEHOLDER_TIMELINE_SOURCES';
+
+	// Metadados para reabrir este arquivo no editor (menu > open animation .am.js).
+	var __ANIMACHINE_BUNDLE__ = 'PLACEHOLDER_BUNDLE_INFO';
+
+	var animations = {};
+
+	timelineSources.forEach(function (timelineSource) {
+	  animations[timelineSource.name] = createAnimationSource(timelineSource);
+	});
+
+	// Compatibilidade com o uso original: require('...am.js') -> mapa de animações.
+	module.exports = animations;
+
+	// Registro estável no browser (independente do nome do projeto):
+	//   window.__animachine['<nome do projeto>']['<timeline>'](rootTarget)
+	if (typeof window !== 'undefined') {
+	  window.__animachine = window.__animachine || {};
+	  window.__animachine['PLACEHOLDER_LIBRARY_NAME'] = animations;
+	}
+
+/***/ }),
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
-	eval("'use strict';\n\nObject.defineProperty(exports, '__esModule', {\n  value: true\n});\nexports['default'] = createAnimationSource;\n\nfunction _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }\n\nfunction _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }\n\nfunction _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }\n\nvar _createEaser = __webpack_require__(2);\n\nvar _createEaser2 = _interopRequireDefault(_createEaser);\n\nvar _createTargets = __webpack_require__(4);\n\nvar _createTargets2 = _interopRequireDefault(_createTargets);\n\nfunction find(items, key, value) {\n  for (var i = 0; i < items.length; ++i) {\n    if (items[i][key] === value) {\n      return items[i];\n    }\n  }\n}\n\nfunction uniq(items) {\n  var result = [];\n  for (var i = 0; i < items.length; ++i) {\n    if (result.indexOf(items[i]) === -1) {\n      return result.push(items[i]);\n    }\n  }\n  return result;\n}\n\nfunction flatten(items) {\n  var result = [];\n  for (var i = 0; i < items.length; ++i) {\n    result.push.apply(result, _toConsumableArray(items[i]));\n  }\n  return result;\n}\n\nvar sortKeys = function sortKeys(a, b) {\n  return a.time - b.time;\n};\n\nvar mergeTransformOriginParams = function mergeTransformOriginParams(next) {\n  return function (params, targets, tlRoot) {\n    var transformOriginX = find(params, 'name', 'transformOriginX');\n    var transformOriginY = find(params, 'name', 'transformOriginY');\n    var transformOriginZ = find(params, 'name', 'transformOriginZ');\n\n    if (transformOriginX || transformOriginY || transformOriginZ) {\n      (function () {\n        //remove all the transform origin params\n        params = params.filter(function (_ref) {\n          var name = _ref.name;\n          return name.indexOf('transformOrigin') !== 0;\n        });\n        var getKeys = function getKeys(param) {\n          return param ? param.keys.map(function (key) {\n            return key.time;\n          }) : [];\n        };\n        var times = uniq(flatten(getKeys(transformOriginX), getKeys(transformOriginY), getKeys(transformOriginZ)));\n        var previousTransformOrigin = { x: 50, y: 50, z: 0 };\n        var getValue = function getValue(param, time, previousValue) {\n          var key = param && find(param.keys, 'time', time);\n          return key ? key.value * 100 : previousValue;\n        };\n        var keys = times.map(function (time) {\n          var to = {\n            x: getValue(transformOriginX, time, previousTransformOrigin.x),\n            y: getValue(transformOriginY, time, previousTransformOrigin.y),\n            z: getValue(transformOriginZ, time, previousTransformOrigin.z)\n          };\n\n          previousTransformOrigin = to;\n\n          return { time: time, value: to.x + '% ' + to.y + '%' };\n        });\n\n        params = [].concat(_toConsumableArray(params), [{ name: 'transformOrigin', keys: keys }]);\n      })();\n    }\n\n    next(params, targets, tlRoot);\n  };\n};\n\nvar fixTransformOriginForSvgNodes = function fixTransformOriginForSvgNodes(next) {\n  return function (params, targets, tlRoot) {\n    //TODO do this only if targets contains an svg\n    var transformOriginParam = find(params, 'name', 'transformOrigin');\n    if (!transformOriginParam || !find(transformOriginParam.keys, 'time', 0)) {\n      tlRoot.set(targets, { transformOrigin: '50% 50%' }, 0);\n    }\n\n    next(params, targets, tlRoot);\n  };\n};\n\nvar addParamTimelines = mergeTransformOriginParams(fixTransformOriginForSvgNodes(function (params, targets, tlRoot) {\n  params.forEach(function (param) {\n    var tlParam = new TimelineMax();\n    tlRoot.add(tlParam, 0);\n    var headTime = 0;\n\n    if (param.keys && param.keys.length) {\n      var sortedKeys = param.keys.sort(sortKeys);\n\n      //set the start position to the first key event is not in the time=0\n      // so tartgets don't going to tween from they current position\n      tlParam.set(targets, _defineProperty({}, param.name, sortedKeys[0].value));\n\n      sortedKeys.forEach(function (key) {\n        var _tlParam$to;\n\n        var duration = key.time - headTime;\n\n        tlParam.to(targets, duration / 1000, (_tlParam$to = {}, _defineProperty(_tlParam$to, param.name, key.value), _defineProperty(_tlParam$to, 'smoothOrigin', false), _defineProperty(_tlParam$to, 'ease', (0, _createEaser2['default'])(key.ease)), _tlParam$to), headTime / 1000);\n        headTime = key.time;\n      });\n    }\n\n    if (param.params) {\n      addParams(param.params, targets);\n    }\n  });\n}));\n\nfunction createAnimationSource(timeline, register) {\n  function animationSource(rootTarget) {\n    //to keep compatible with react-gsap-enhancer v0.2.x\n    if (rootTarget.hasOwnProperty('target') && rootTarget.hasOwnProperty('options')) {\n      rootTarget = rootTarget.target;\n    }\n    //--------------------------------------------------\n\n    var tlRoot = new TimelineMax();\n\n    timeline.tracks.forEach(function (track) {\n      var targets = track.selectors.map(function (selector) {\n        return (0, _createTargets2['default'])(rootTarget, selector);\n      });\n\n      addParamTimelines(track.params, targets, tlRoot);\n    });\n\n    //add to the animachine registry\n    if (register) {\n      register(rootTarget, tlRoot);\n    }\n\n    return tlRoot;\n  }\n\n  return animationSource;\n}\n\nmodule.exports = exports['default'];\n//http://greensock.com/docs/#/HTML5/Plugins/CSSPlugin/\n\n/*****************\n ** WEBPACK FOOTER\n ** ./src/animachine-connect/create-animation-source.js\n ** module id = 1\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/animachine-connect/create-animation-source.js?");
+	'use strict';
 
-/***/ },
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	exports['default'] = createAnimationSource;
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
+
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+	var _createEaser = __webpack_require__(2);
+
+	var _createEaser2 = _interopRequireDefault(_createEaser);
+
+	var _createTargets = __webpack_require__(4);
+
+	var _createTargets2 = _interopRequireDefault(_createTargets);
+
+	function find(items, key, value) {
+	  for (var i = 0; i < items.length; ++i) {
+	    if (items[i][key] === value) {
+	      return items[i];
+	    }
+	  }
+	}
+
+	function uniq(items) {
+	  var result = [];
+	  for (var i = 0; i < items.length; ++i) {
+	    if (result.indexOf(items[i]) === -1) {
+	      result.push(items[i]);
+	    }
+	  }
+	  return result;
+	}
+
+	function flatten() {
+	  var result = [];
+
+	  for (var _len = arguments.length, items = Array(_len), _key = 0; _key < _len; _key++) {
+	    items[_key] = arguments[_key];
+	  }
+
+	  for (var i = 0; i < items.length; ++i) {
+	    result.push.apply(result, _toConsumableArray(items[i]));
+	  }
+	  return result;
+	}
+
+	var sortKeys = function sortKeys(a, b) {
+	  return a.time - b.time;
+	};
+
+	var mergeTransformOriginParams = function mergeTransformOriginParams(next) {
+	  return function (params, targets, tlRoot) {
+	    var transformOriginX = find(params, 'name', 'transformOriginX');
+	    var transformOriginY = find(params, 'name', 'transformOriginY');
+	    var transformOriginZ = find(params, 'name', 'transformOriginZ');
+
+	    if (transformOriginX || transformOriginY || transformOriginZ) {
+	      (function () {
+	        //remove all the transform origin params
+	        params = params.filter(function (_ref) {
+	          var name = _ref.name;
+	          return name.indexOf('transformOrigin') !== 0;
+	        });
+	        var getKeys = function getKeys(param) {
+	          return param ? param.keys.map(function (key) {
+	            return key.time;
+	          }) : [];
+	        };
+	        var times = uniq(flatten(getKeys(transformOriginX), getKeys(transformOriginY), getKeys(transformOriginZ)));
+
+	        var previousTransformOrigin = { x: 50, y: 50, z: 0 };
+	        var getValue = function getValue(param, time, previousValue) {
+	          var key = param && find(param.keys, 'time', time);
+	          return key ? key.value * 100 : previousValue;
+	        };
+	        var keys = times.map(function (time) {
+	          var to = {
+	            x: getValue(transformOriginX, time, previousTransformOrigin.x),
+	            y: getValue(transformOriginY, time, previousTransformOrigin.y),
+	            z: getValue(transformOriginZ, time, previousTransformOrigin.z)
+	          };
+
+	          previousTransformOrigin = to;
+
+	          return { time: time, value: to.x + '% ' + to.y + '%' };
+	        });
+
+	        params = [].concat(_toConsumableArray(params), [{ name: 'transformOrigin', keys: keys }]);
+	      })();
+	    }
+
+	    next(params, targets, tlRoot);
+	  };
+	};
+
+	var fixTransformOriginForSvgNodes = function fixTransformOriginForSvgNodes(next) {
+	  return function (params, targets, tlRoot) {
+	    //TODO do this only if targets contains an svg
+	    var transformOriginParam = find(params, 'name', 'transformOrigin');
+	    if (!transformOriginParam || !find(transformOriginParam.keys, 'time', 0)) {
+	      tlRoot.set(targets, { transformOrigin: '50% 50%' }, 0);
+	    }
+
+	    next(params, targets, tlRoot);
+	  };
+	};
+
+	// Nomes de parâmetros de rotação e o sufixo que o GSAP usa para "short rotation".
+	var ROTATION_PARAM_NAMES = ['rotation', 'rotationX', 'rotationY', 'rotationZ'];
+
+	// Versões antigas acumulavam "_short" a cada leitura (mutação); normaliza antes de usar.
+	function stripShortSuffix(value) {
+	  if (typeof value !== 'string') {
+	    return value;
+	  }
+	  return value.replace(/(?:_short)+$/, '');
+	}
+
+	// IMPORTANTE: não mutar o documento. O valor original continua no model; só a cópia
+	// usada para montar a timeline recebe o sufixo _short.
+	var makeAllRotationShort = function makeAllRotationShort(next) {
+	  return function (params, targets, tlRoot) {
+	    var rotationParams = ROTATION_PARAM_NAMES.map(function (name) {
+	      return find(params, 'name', name);
+	    }).filter(function (param) {
+	      return !!param;
+	    });
+
+	    if (!rotationParams.length) {
+	      next(params, targets, tlRoot);
+	      return;
+	    }
+
+	    var shortParams = params.map(function (param) {
+	      if (rotationParams.indexOf(param) === -1 || !param.keys) {
+	        return param;
+	      }
+	      return Object.assign({}, param, {
+	        keys: param.keys.map(function (key) {
+	          return Object.assign({}, key, {
+	            value: stripShortSuffix(key.value) + '_short'
+	          });
+	        })
+	      });
+	    });
+
+	    next(shortParams, targets, tlRoot);
+	  };
+	};
+
+	var addParamTimelines = mergeTransformOriginParams(fixTransformOriginForSvgNodes(makeAllRotationShort(function (params, targets, tlRoot) {
+	  params.forEach(function (param) {
+	    var tlParam = new TimelineMax();
+	    tlRoot.add(tlParam, 0);
+	    var headTime = 0;
+
+	    if (param.keys && param.keys.length) {
+	      // slice(): sort() mutaria a ordem dos keys no documento
+	      var sortedKeys = param.keys.slice().sort(sortKeys);
+
+	      //set the start position to the first key event is not in the time=0
+	      // so tartgets don't going to tween from they current position
+	      tlParam.set(targets, _defineProperty({}, param.name, sortedKeys[0].value));
+
+	      sortedKeys.forEach(function (key) {
+	        var _tlParam$to;
+
+	        var duration = key.time - headTime;
+
+	        tlParam.to(targets, duration / 1000, (_tlParam$to = {}, _defineProperty(_tlParam$to, param.name, key.value), _defineProperty(_tlParam$to, 'smoothOrigin', false), _defineProperty(_tlParam$to, 'ease', (0, _createEaser2['default'])(key.ease)), _tlParam$to), headTime / 1000);
+	        headTime = key.time;
+	      });
+	    }
+
+	    if (param.params) {
+	      addParams(param.params, targets);
+	    }
+	  });
+	})));
+
+	function createAnimationSource(timeline, register) {
+	  function animationSource(rootTarget) {
+	    //to keep compatible with react-gsap-enhancer v0.2.x
+	    if (rootTarget.hasOwnProperty('target') && rootTarget.hasOwnProperty('options')) {
+	      rootTarget = rootTarget.target;
+	    }
+	    //--------------------------------------------------
+
+	    var tlRoot = new TimelineMax();
+
+	    timeline.tracks.forEach(function (track) {
+	      var targets = track.selectors.map(function (selector) {
+	        return (0, _createTargets2['default'])(rootTarget, selector);
+	      });
+
+	      addParamTimelines(track.params, targets, tlRoot);
+	    });
+
+	    //add to the animachine registry
+	    if (register) {
+	      register(rootTarget, tlRoot);
+	    }
+
+	    return tlRoot;
+	  }
+
+	  return animationSource;
+	}
+
+	module.exports = exports['default'];
+	//http://greensock.com/docs/#/HTML5/Plugins/CSSPlugin/
+
+/***/ }),
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
-	eval("'use strict';\n\nObject.defineProperty(exports, '__esModule', {\n  value: true\n});\n\nfunction _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }\n\nvar _bezierEasing = __webpack_require__(3);\n\nvar _bezierEasing2 = _interopRequireDefault(_bezierEasing);\n\nexports['default'] = function (ease) {\n  if (!ease) {\n    return Power0.easeNone;\n  }\n  var bezierEasing = (0, _bezierEasing2['default'])([ease.pointAX, ease.pointAY, ease.pointBX, ease.pointBY]);\n  var easer = new GreenSockGlobals.Ease(function (t) {\n    return bezierEasing.get(t);\n  });\n\n  if (ease.roughEase) {\n    easer = new GreenSockGlobals.RoughEase({\n      template: easer,\n      strength: ease.roughStrength,\n      points: ease.roughPoints,\n      clamp: ease.roughClamp,\n      randomise: ease.roughRandomise,\n      taper: ease.roughTaper\n    });\n  }\n\n  return easer;\n};\n\nmodule.exports = exports['default'];\n\n/*****************\n ** WEBPACK FOOTER\n ** ./src/animachine-connect/createEaser.js\n ** module id = 2\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/animachine-connect/createEaser.js?");
+	'use strict';
 
-/***/ },
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _bezierEasing = __webpack_require__(3);
+
+	var _bezierEasing2 = _interopRequireDefault(_bezierEasing);
+
+	exports['default'] = function (ease) {
+	  if (!ease) {
+	    return Power0.easeNone;
+	  }
+	  var bezierEasing = (0, _bezierEasing2['default'])([ease.pointAX, ease.pointAY, ease.pointBX, ease.pointBY]);
+	  var easer = new GreenSockGlobals.Ease(function (t) {
+	    return bezierEasing.get(t);
+	  });
+
+	  if (ease.roughEase) {
+	    easer = new GreenSockGlobals.RoughEase({
+	      template: easer,
+	      strength: ease.roughStrength,
+	      points: ease.roughPoints,
+	      clamp: ease.roughClamp,
+	      randomise: ease.roughRandomise,
+	      taper: ease.roughTaper
+	    });
+	  }
+
+	  return easer;
+	};
+
+	module.exports = exports['default'];
+
+/***/ }),
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
-	eval("/**\n * BezierEasing - use bezier curve for transition easing function\n * by Gaëtan Renaudeau 2014 - 2015 – MIT License\n *\n * Credits: is based on Firefox's nsSMILKeySpline.cpp\n * Usage:\n * var spline = BezierEasing([ 0.25, 0.1, 0.25, 1.0 ])\n * spline.get(x) => returns the easing value | x must be in [0, 1] range\n *\n */\n\n// These values are established by empiricism with tests (tradeoff: performance VS precision)\nvar NEWTON_ITERATIONS = 4;\nvar NEWTON_MIN_SLOPE = 0.001;\nvar SUBDIVISION_PRECISION = 0.0000001;\nvar SUBDIVISION_MAX_ITERATIONS = 10;\n\nvar kSplineTableSize = 11;\nvar kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);\n\nvar float32ArraySupported = typeof Float32Array === \"function\";\n\nfunction A (aA1, aA2) { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }\nfunction B (aA1, aA2) { return 3.0 * aA2 - 6.0 * aA1; }\nfunction C (aA1)      { return 3.0 * aA1; }\n\n// Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.\nfunction calcBezier (aT, aA1, aA2) {\n  return ((A(aA1, aA2)*aT + B(aA1, aA2))*aT + C(aA1))*aT;\n}\n\n// Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.\nfunction getSlope (aT, aA1, aA2) {\n  return 3.0 * A(aA1, aA2)*aT*aT + 2.0 * B(aA1, aA2) * aT + C(aA1);\n}\n\nfunction binarySubdivide (aX, aA, aB, mX1, mX2) {\n  var currentX, currentT, i = 0;\n  do {\n    currentT = aA + (aB - aA) / 2.0;\n    currentX = calcBezier(currentT, mX1, mX2) - aX;\n    if (currentX > 0.0) {\n      aB = currentT;\n    } else {\n      aA = currentT;\n    }\n  } while (Math.abs(currentX) > SUBDIVISION_PRECISION && ++i < SUBDIVISION_MAX_ITERATIONS);\n  return currentT;\n}\n\nfunction newtonRaphsonIterate (aX, aGuessT, mX1, mX2) {\n  for (var i = 0; i < NEWTON_ITERATIONS; ++i) {\n    var currentSlope = getSlope(aGuessT, mX1, mX2);\n    if (currentSlope === 0.0) return aGuessT;\n    var currentX = calcBezier(aGuessT, mX1, mX2) - aX;\n    aGuessT -= currentX / currentSlope;\n  }\n  return aGuessT;\n}\n\n/**\n * points is an array of [ mX1, mY1, mX2, mY2 ]\n */\nfunction BezierEasing (points, b, c, d) {\n  if (arguments.length === 4) {\n    return new BezierEasing([ points, b, c, d ]);\n  }\n  if (!(this instanceof BezierEasing)) return new BezierEasing(points);\n\n  if (!points || points.length !== 4) {\n    throw new Error(\"BezierEasing: points must contains 4 values\");\n  }\n  for (var i=0; i<4; ++i) {\n    if (typeof points[i] !== \"number\" || isNaN(points[i]) || !isFinite(points[i])) {\n      throw new Error(\"BezierEasing: points should be integers.\");\n    }\n  }\n  if (points[0] < 0 || points[0] > 1 || points[2] < 0 || points[2] > 1) {\n    throw new Error(\"BezierEasing x values must be in [0, 1] range.\");\n  }\n\n  this._str = \"BezierEasing(\"+points+\")\";\n  this._css = \"cubic-bezier(\"+points+\")\";\n  this._p = points;\n  this._mSampleValues = float32ArraySupported ? new Float32Array(kSplineTableSize) : new Array(kSplineTableSize);\n  this._precomputed = false;\n\n  this.get = this.get.bind(this);\n}\n\nBezierEasing.prototype = {\n\n  get: function (x) {\n    var mX1 = this._p[0],\n      mY1 = this._p[1],\n      mX2 = this._p[2],\n      mY2 = this._p[3];\n    if (!this._precomputed) this._precompute();\n    if (mX1 === mY1 && mX2 === mY2) return x; // linear\n    // Because JavaScript number are imprecise, we should guarantee the extremes are right.\n    if (x === 0) return 0;\n    if (x === 1) return 1;\n    return calcBezier(this._getTForX(x), mY1, mY2);\n  },\n\n  getPoints: function() {\n    return this._p;\n  },\n\n  toString: function () {\n    return this._str;\n  },\n\n  toCSS: function () {\n    return this._css;\n  },\n\n  // Private part\n\n  _precompute: function () {\n    var mX1 = this._p[0],\n      mY1 = this._p[1],\n      mX2 = this._p[2],\n      mY2 = this._p[3];\n    this._precomputed = true;\n    if (mX1 !== mY1 || mX2 !== mY2)\n      this._calcSampleValues();\n  },\n\n  _calcSampleValues: function () {\n    var mX1 = this._p[0],\n      mX2 = this._p[2];\n    for (var i = 0; i < kSplineTableSize; ++i) {\n      this._mSampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);\n    }\n  },\n\n  /**\n   * getTForX chose the fastest heuristic to determine the percentage value precisely from a given X projection.\n   */\n  _getTForX: function (aX) {\n    var mX1 = this._p[0],\n      mX2 = this._p[2],\n      mSampleValues = this._mSampleValues;\n\n    var intervalStart = 0.0;\n    var currentSample = 1;\n    var lastSample = kSplineTableSize - 1;\n\n    for (; currentSample !== lastSample && mSampleValues[currentSample] <= aX; ++currentSample) {\n      intervalStart += kSampleStepSize;\n    }\n    --currentSample;\n\n    // Interpolate to provide an initial guess for t\n    var dist = (aX - mSampleValues[currentSample]) / (mSampleValues[currentSample+1] - mSampleValues[currentSample]);\n    var guessForT = intervalStart + dist * kSampleStepSize;\n\n    var initialSlope = getSlope(guessForT, mX1, mX2);\n    if (initialSlope >= NEWTON_MIN_SLOPE) {\n      return newtonRaphsonIterate(aX, guessForT, mX1, mX2);\n    } else if (initialSlope === 0.0) {\n      return guessForT;\n    } else {\n      return binarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize, mX1, mX2);\n    }\n  }\n};\n\n// CSS mapping\nBezierEasing.css = {\n  \"ease\":        BezierEasing.ease      = BezierEasing(0.25, 0.1, 0.25, 1.0),\n  \"linear\":      BezierEasing.linear    = BezierEasing(0.00, 0.0, 1.00, 1.0),\n  \"ease-in\":     BezierEasing.easeIn    = BezierEasing(0.42, 0.0, 1.00, 1.0),\n  \"ease-out\":    BezierEasing.easeOut   = BezierEasing(0.00, 0.0, 0.58, 1.0),\n  \"ease-in-out\": BezierEasing.easeInOut = BezierEasing(0.42, 0.0, 0.58, 1.0)\n};\n\nmodule.exports = BezierEasing;\n\n\n/*****************\n ** WEBPACK FOOTER\n ** ./~/bezier-easing/index.js\n ** module id = 3\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./~/bezier-easing/index.js?");
+	/**
+	 * BezierEasing - use bezier curve for transition easing function
+	 * by Gaëtan Renaudeau 2014 - 2015 – MIT License
+	 *
+	 * Credits: is based on Firefox's nsSMILKeySpline.cpp
+	 * Usage:
+	 * var spline = BezierEasing([ 0.25, 0.1, 0.25, 1.0 ])
+	 * spline.get(x) => returns the easing value | x must be in [0, 1] range
+	 *
+	 */
 
-/***/ },
+	// These values are established by empiricism with tests (tradeoff: performance VS precision)
+	var NEWTON_ITERATIONS = 4;
+	var NEWTON_MIN_SLOPE = 0.001;
+	var SUBDIVISION_PRECISION = 0.0000001;
+	var SUBDIVISION_MAX_ITERATIONS = 10;
+
+	var kSplineTableSize = 11;
+	var kSampleStepSize = 1.0 / (kSplineTableSize - 1.0);
+
+	var float32ArraySupported = typeof Float32Array === "function";
+
+	function A (aA1, aA2) { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }
+	function B (aA1, aA2) { return 3.0 * aA2 - 6.0 * aA1; }
+	function C (aA1)      { return 3.0 * aA1; }
+
+	// Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
+	function calcBezier (aT, aA1, aA2) {
+	  return ((A(aA1, aA2)*aT + B(aA1, aA2))*aT + C(aA1))*aT;
+	}
+
+	// Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2.
+	function getSlope (aT, aA1, aA2) {
+	  return 3.0 * A(aA1, aA2)*aT*aT + 2.0 * B(aA1, aA2) * aT + C(aA1);
+	}
+
+	function binarySubdivide (aX, aA, aB, mX1, mX2) {
+	  var currentX, currentT, i = 0;
+	  do {
+	    currentT = aA + (aB - aA) / 2.0;
+	    currentX = calcBezier(currentT, mX1, mX2) - aX;
+	    if (currentX > 0.0) {
+	      aB = currentT;
+	    } else {
+	      aA = currentT;
+	    }
+	  } while (Math.abs(currentX) > SUBDIVISION_PRECISION && ++i < SUBDIVISION_MAX_ITERATIONS);
+	  return currentT;
+	}
+
+	function newtonRaphsonIterate (aX, aGuessT, mX1, mX2) {
+	  for (var i = 0; i < NEWTON_ITERATIONS; ++i) {
+	    var currentSlope = getSlope(aGuessT, mX1, mX2);
+	    if (currentSlope === 0.0) return aGuessT;
+	    var currentX = calcBezier(aGuessT, mX1, mX2) - aX;
+	    aGuessT -= currentX / currentSlope;
+	  }
+	  return aGuessT;
+	}
+
+	/**
+	 * points is an array of [ mX1, mY1, mX2, mY2 ]
+	 */
+	function BezierEasing (points, b, c, d) {
+	  if (arguments.length === 4) {
+	    return new BezierEasing([ points, b, c, d ]);
+	  }
+	  if (!(this instanceof BezierEasing)) return new BezierEasing(points);
+
+	  if (!points || points.length !== 4) {
+	    throw new Error("BezierEasing: points must contains 4 values");
+	  }
+	  for (var i=0; i<4; ++i) {
+	    if (typeof points[i] !== "number" || isNaN(points[i]) || !isFinite(points[i])) {
+	      throw new Error("BezierEasing: points should be integers.");
+	    }
+	  }
+	  if (points[0] < 0 || points[0] > 1 || points[2] < 0 || points[2] > 1) {
+	    throw new Error("BezierEasing x values must be in [0, 1] range.");
+	  }
+
+	  this._str = "BezierEasing("+points+")";
+	  this._css = "cubic-bezier("+points+")";
+	  this._p = points;
+	  this._mSampleValues = float32ArraySupported ? new Float32Array(kSplineTableSize) : new Array(kSplineTableSize);
+	  this._precomputed = false;
+
+	  this.get = this.get.bind(this);
+	}
+
+	BezierEasing.prototype = {
+
+	  get: function (x) {
+	    var mX1 = this._p[0],
+	      mY1 = this._p[1],
+	      mX2 = this._p[2],
+	      mY2 = this._p[3];
+	    if (!this._precomputed) this._precompute();
+	    if (mX1 === mY1 && mX2 === mY2) return x; // linear
+	    // Because JavaScript number are imprecise, we should guarantee the extremes are right.
+	    if (x === 0) return 0;
+	    if (x === 1) return 1;
+	    return calcBezier(this._getTForX(x), mY1, mY2);
+	  },
+
+	  getPoints: function() {
+	    return this._p;
+	  },
+
+	  toString: function () {
+	    return this._str;
+	  },
+
+	  toCSS: function () {
+	    return this._css;
+	  },
+
+	  // Private part
+
+	  _precompute: function () {
+	    var mX1 = this._p[0],
+	      mY1 = this._p[1],
+	      mX2 = this._p[2],
+	      mY2 = this._p[3];
+	    this._precomputed = true;
+	    if (mX1 !== mY1 || mX2 !== mY2)
+	      this._calcSampleValues();
+	  },
+
+	  _calcSampleValues: function () {
+	    var mX1 = this._p[0],
+	      mX2 = this._p[2];
+	    for (var i = 0; i < kSplineTableSize; ++i) {
+	      this._mSampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
+	    }
+	  },
+
+	  /**
+	   * getTForX chose the fastest heuristic to determine the percentage value precisely from a given X projection.
+	   */
+	  _getTForX: function (aX) {
+	    var mX1 = this._p[0],
+	      mX2 = this._p[2],
+	      mSampleValues = this._mSampleValues;
+
+	    var intervalStart = 0.0;
+	    var currentSample = 1;
+	    var lastSample = kSplineTableSize - 1;
+
+	    for (; currentSample !== lastSample && mSampleValues[currentSample] <= aX; ++currentSample) {
+	      intervalStart += kSampleStepSize;
+	    }
+	    --currentSample;
+
+	    // Interpolate to provide an initial guess for t
+	    var dist = (aX - mSampleValues[currentSample]) / (mSampleValues[currentSample+1] - mSampleValues[currentSample]);
+	    var guessForT = intervalStart + dist * kSampleStepSize;
+
+	    var initialSlope = getSlope(guessForT, mX1, mX2);
+	    if (initialSlope >= NEWTON_MIN_SLOPE) {
+	      return newtonRaphsonIterate(aX, guessForT, mX1, mX2);
+	    } else if (initialSlope === 0.0) {
+	      return guessForT;
+	    } else {
+	      return binarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize, mX1, mX2);
+	    }
+	  }
+	};
+
+	// CSS mapping
+	BezierEasing.css = {
+	  "ease":        BezierEasing.ease      = BezierEasing(0.25, 0.1, 0.25, 1.0),
+	  "linear":      BezierEasing.linear    = BezierEasing(0.00, 0.0, 1.00, 1.0),
+	  "ease-in":     BezierEasing.easeIn    = BezierEasing(0.42, 0.0, 1.00, 1.0),
+	  "ease-out":    BezierEasing.easeOut   = BezierEasing(0.00, 0.0, 0.58, 1.0),
+	  "ease-in-out": BezierEasing.easeInOut = BezierEasing(0.42, 0.0, 0.58, 1.0)
+	};
+
+	module.exports = BezierEasing;
+
+
+/***/ }),
 /* 4 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
-	eval("'use strict';\n\nObject.defineProperty(exports, '__esModule', {\n  value: true\n});\n\nfunction _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }\n\nexports['default'] = function (rootTarget, selector) {\n  if (selector.selectorType === 'css') {\n    //TODO throw if rootTarget not a dom element\n    if (selector.query === ':root') {\n      return [rootTarget];\n    } else {\n      try {\n        return [].concat(_toConsumableArray(rootTarget.querySelectorAll(selector.query)));\n      } catch (e) {\n        console.warn('error on using css sselector  \"' + selector.query + '\"');\n        return [];\n      }\n    }\n  } else if (selector.selectorType === 'react') {\n    return rootTarget.findWithCommands(selector.query);\n  }\n};\n\nmodule.exports = exports['default'];\n\n/*****************\n ** WEBPACK FOOTER\n ** ./src/animachine-connect/createTargets.js\n ** module id = 4\n ** module chunks = 0\n **/\n//# sourceURL=webpack:///./src/animachine-connect/createTargets.js?");
+	'use strict';
 
-/***/ }
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
+
+	exports['default'] = function (rootTarget, selector) {
+	  if (selector.selectorType === 'css') {
+	    //TODO throw if rootTarget not a dom element
+	    if (selector.query === ':root') {
+	      return [rootTarget];
+	    } else {
+	      try {
+	        // seletores relativos ("> :nth-child(3)") são inválidos em querySelectorAll;
+	        // ancoramos no próprio rootTarget com :scope (funciona em projetos antigos)
+	        var query = selector.query;
+	        if (query.charAt(0) === '>') {
+	          query = ':scope ' + query;
+	        }
+	        return [].concat(_toConsumableArray(rootTarget.querySelectorAll(query)));
+	      } catch (e) {
+	        console.warn('error on using css selector  "' + selector.query + '"');
+	        return [];
+	      }
+	    }
+	  } else if (selector.selectorType === 'react') {
+	    return rootTarget.findWithCommands(selector.query);
+	  }
+	};
+
+	module.exports = exports['default'];
+
+/***/ })
 /******/ ])
 });
 ;

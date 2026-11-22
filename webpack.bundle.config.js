@@ -3,7 +3,8 @@ var webpack = require('webpack')
 
 module.exports = {
   context: __dirname,
-  devtool: 'eval',
+  // sem `eval`: o export injeta JSON literal e aspas em nomes de track nao quebram o arquivo
+  devtool: false,
   entry: path.join(__dirname, 'src/rocks/create-bundle-file/bundle.template.js'),
   output: {
     path: path.join( __dirname, '/src/rocks/create-bundle-file/bundled/'),

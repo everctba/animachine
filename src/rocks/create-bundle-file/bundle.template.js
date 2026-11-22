@@ -1,44 +1,25 @@
 var createAnimationSource = require('animachine-connect/create-animation-source')
 
-//TODO: remove in prod
-var test = [{"a": {"b": "foo"}}, 4]
+// Dados do projeto injetados no export (ver src/rocks/create-bundle-file/index.js).
+// Sem `eval` no bundle: o JSON entra como literal e é válido mesmo com aspas.
 var projectSource = 'PLACEHOLDER_PROJECT_SOURCE'
-
-var loadProjectPromise
-function loadProject() {
-  if (!loadProjectPromise) {
-    loadProjectPromise = new Promise(function (resolve) {
-      var intervalID = setInterval(function () {
-        if (typeof window.__animachineLoadProject === 'function') {
-          clearInterval(intervalID)
-          var project = window.__animachineLoadProject(projectSource)
-          resolve(project)
-        }
-      }, 100)
-    })
-  }
-  return loadProjectPromise
-}
-
 var timelineSources = 'PLACEHOLDER_TIMELINE_SOURCES'
+
+// Metadados para reabrir este arquivo no editor (menu > open animation .am.js).
+var __ANIMACHINE_BUNDLE__ = 'PLACEHOLDER_BUNDLE_INFO'
+
 var animations = {}
 
-timelineSources.forEach(function (timelineSource, index) {
-  var gsapSource = createAnimationSource(
-    timelineSource,
-    //TODO remove in prod
-    (rootTarget, gsapAnimation) => {
-      loadProject()
-        .then(function (project) {
-          project.timelines
-            .find(function (timeline) {
-              return timeline.name === timelineSource.name
-            })
-            .registerPreview(rootTarget, gsapAnimation)
-        })
-    }
-  )
-  animations[timelineSource.name] = gsapSource
+timelineSources.forEach(function (timelineSource) {
+  animations[timelineSource.name] = createAnimationSource(timelineSource)
 })
 
+// Compatibilidade com o uso original: require('...am.js') -> mapa de animações.
 module.exports = animations
+
+// Registro estável no browser (independente do nome do projeto):
+//   window.__animachine['<nome do projeto>']['<timeline>'](rootTarget)
+if (typeof window !== 'undefined') {
+  window.__animachine = window.__animachine || {}
+  window.__animachine['PLACEHOLDER_LIBRARY_NAME'] = animations
+}

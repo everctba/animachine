@@ -1,20 +1,29 @@
-{
-  "manifest_version": 3,
-  "name": "animachine (local)",
-  "version": "0.4.0",
-  "description": "GUI for creating GSAP animations over any web page",
-  "action": {
-    "default_title": "Open animachine"
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "permissions": ["scripting", "activeTab"],
-  "host_permissions": ["<all_urls>"],
-  "web_accessible_resources": [
-    {
-      "resources": ["font-awesome/fonts/*"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+﻿{
+    "manifest_version":  3,
+    "name":  "animachine (local)",
+    "version":  "0.4.1",
+    "description":  "GUI for creating GSAP animations over any web page",
+    "action":  {
+                   "default_title":  "Open animachine"
+               },
+    "background":  {
+                       "service_worker":  "background.js"
+                   },
+    "permissions":  [
+                        "scripting",
+                        "activeTab"
+                    ],
+    "host_permissions":  [
+                             "\u003call_urls\u003e"
+                         ],
+    "web_accessible_resources":  [
+                                     {
+                                         "resources":  [
+                                                           "font-awesome/fonts/*"
+                                                       ],
+                                         "matches":  [
+                                                         "\u003call_urls\u003e"
+                                                     ]
+                                     }
+                                 ]
 }

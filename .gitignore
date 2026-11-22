@@ -10,3 +10,4 @@ browser
 local-test/animachine.js
 extension/animachine.js
 extension/vendor/
+local-test/vendor/

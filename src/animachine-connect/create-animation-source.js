@@ -77,18 +77,41 @@ const fixTransformOriginForSvgNodes = next => (params, targets, tlRoot) => {
   next(params, targets, tlRoot)
 }
 
-const makeAllRotationShort = next => (params, targets, tlRoot) => {
-  const rotationParams = [
-    find(params, 'name', 'rotation'),
-    find(params, 'name', 'rotationX'),
-    find(params, 'name', 'rotationY'),
-    find(params, 'name', 'rotationZ'),
-  ].filter(param => !!param)
+// Nomes de parâmetros de rotação e o sufixo que o GSAP usa para "short rotation".
+const ROTATION_PARAM_NAMES = ['rotation', 'rotationX', 'rotationY', 'rotationZ']
 
-  rotationParams.forEach(param => {
-    param.keys.forEach(key => key.value = `${key.value}_short`)
+// Versões antigas acumulavam "_short" a cada leitura (mutação); normaliza antes de usar.
+function stripShortSuffix(value) {
+  if (typeof value !== 'string') {
+    return value
+  }
+  return value.replace(/(?:_short)+$/, '')
+}
+
+// IMPORTANTE: não mutar o documento. O valor original continua no model; só a cópia
+// usada para montar a timeline recebe o sufixo _short.
+const makeAllRotationShort = next => (params, targets, tlRoot) => {
+  const rotationParams = ROTATION_PARAM_NAMES
+    .map(name => find(params, 'name', name))
+    .filter(param => !!param)
+
+  if (!rotationParams.length) {
+    next(params, targets, tlRoot)
+    return
+  }
+
+  const shortParams = params.map(param => {
+    if (rotationParams.indexOf(param) === -1 || !param.keys) {
+      return param
+    }
+    return Object.assign({}, param, {
+      keys: param.keys.map(key => Object.assign({}, key, {
+        value: `${stripShortSuffix(key.value)}_short`,
+      })),
+    })
   })
-  next(params, targets, tlRoot)
+
+  next(shortParams, targets, tlRoot)
 }
 
 
@@ -103,7 +126,8 @@ makeAllRotationShort(
       let headTime = 0
 
       if (param.keys && param.keys.length) {
-        const sortedKeys = param.keys.sort(sortKeys)
+        // slice(): sort() mutaria a ordem dos keys no documento
+        const sortedKeys = param.keys.slice().sort(sortKeys)
 
         //set the start position to the first key event is not in the time=0
         // so tartgets don't going to tween from they current position

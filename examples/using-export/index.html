@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Using an animachine export</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f4f6f8; }
+    #stage { padding: 40px; max-width: 760px; }
+    #box-1 {
+      width: 120px; height: 80px; border-radius: 12px;
+      background: #ffe0b2; border: 2px solid #cfd8dc;
+      box-shadow: 0 2px 6px #0001;
+    }
+    button { margin: 8px 8px 0 0; padding: 8px 12px; font-size: 14px; cursor: pointer; }
+    code { background: #e3e8eb; padding: 1px 4px; border-radius: 4px; }
+    p { line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <h1>Using an animachine export</h1>
+
+    <p>
+      This animation was authored in the editor on a page that has an element
+      <code>#box-1</code>. The exported bundle is a GSAP timeline that targets
+      elements by CSS selector, resolved <strong>inside the root element</strong>
+      passed to the timeline — that is why the same markup must exist here.
+    </p>
+
+    <div id="box-1"></div>
+
+    <p>
+      <button data-action="play">play</button>
+      <button data-action="pause">pause</button>
+      <button data-action="rewind">rewind</button>
+      <button data-action="loop">loop</button>
+    </p>
+
+    <p><small>Project and timeline names are printed in the console.</small></p>
+  </div>
+
+  <!-- 1) GSAP first: the bundle uses the global TimelineMax -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
+
+  <!-- 2) the exported bundle -->
+  <script src="demo.am.js"></script>
+
+  <script>
+    var projectName = 'new project'
+    var timelineName = 'new timeline'
+
+    // stable registry (0.4.1+), with the original global as fallback
+    var animations = (window.__animachine && window.__animachine[projectName]) || window[projectName]
+    if (!animations) {
+      console.error('demo.am.js did not expose the project', projectName)
+    }
+
+    // the root element scopes every selector of the export
+    var tl = animations[timelineName](document.body)
+    tl.pause(0)
+
+    console.log('export available:', Object.keys(animations).join(', '))
+
+    document.addEventListener('click', function (event) {
+      var action = event.target.getAttribute('data-action')
+      if (!action) {
+        return
+      }
+      if (action === 'play') {
+        tl.play()
+      }
+      else if (action === 'pause') {
+        tl.pause()
+      }
+      else if (action === 'rewind') {
+        tl.pause()
+        tl.time(0)
+      }
+      else if (action === 'loop') {
+        tl.repeat(-1)
+        tl.play()
+      }
+    })
+  </script>
+</body>
+</html>

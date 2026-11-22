@@ -62,13 +62,65 @@ Notas de verificação:
   por linha de comando, então o carregamento é manual (Load unpacked);
 * páginas `chrome://`, Chrome Web Store e PDFs internos não aceitam injeção.
 
-## Para produção (no site publicado)
+## Usando a animação exportada (GSAP) — em outro site
 
-O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai:
+O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai é o `.am.js`: um
+bundle UMD autocontido que embute os dados do projeto e o runtime que remonta um `TimelineMax`.
 
-* o arquivo `.am.js` exportado (bundle UMD com o projeto e as timelines), com GSAP carregado antes;
-* um disparador: `animachine-connect` (decorator React) ou, em HTML puro, o global do bundle
-  (`window['<nome do projeto>']['<timeline>'](document.body)`) — ponto a validar/embrulhar.
+```html
+<!-- 1) GSAP 1.x primeiro (o bundle usa TimelineMax global) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
+
+<!-- 2) o export do editor -->
+<script src="meu-projeto.am.js"></script>
+
+<script>
+  // 3) o nome do PROJETO vira um objeto com uma função por timeline
+  var animations = window.__animachine['new project']   // ou window['new project']
+
+  // 4) chame a timeline passando o elemento RAIZ (os seletores são resolvidos dentro dele)
+  var tl = animations['new timeline'](document.body)
+
+  // 5) controle normal de TimelineMax
+  tl.pause(0)      // para no começo
+  tl.play()        // toca
+  tl.timeScale(2)  // 2x
+  tl.repeat(-1)    // loop
+  tl.time(0.5)     // busca 500 ms
+</script>
+```
+
+Regras importantes:
+
+* **O vínculo é por seletor CSS**, não por projeto: cada track guarda um seletor capturado na
+  página e o runtime faz `rootElement.querySelectorAll(seletor)`. Em outro site, a animação só
+  afeta elementos que casem com esses seletores — se o HTML for diferente, ela não faz nada
+  (silenciosamente). Por isso, prefira seletores estáveis (`#id`, `.classe`) via
+  **add track (css selector)** em vez dos caminhos `:nth-child(…)` gerados pelo picker.
+* Seletor que começa com `:scope > …` é ancorado nos filhos do `rootElement` — passe
+  `document.body` (ou a `<section>` certa), nunca `document`.
+* `window.__animachine[projeto][timeline]` é o registro estável; `window[projeto]` continua
+  funcionando pela API original; com bundler, `require('./projeto.am.js')` devolve o mesmo mapa.
+* React: use `animachine-connect` para tocar as mesmas animações dentro de um componente.
+
+**Reabrir para editar:** menu da timeline (círculo à direita) → **open animation (.am.js)**. O editor
+lê o marcador `__ANIMACHINE_BUNDLE__` do arquivo (não executa o JS) e recupera projeto, tracks,
+keys e eases. O `.am.json` continua sendo o arquivo de projeto "puro".
+
+**Validado em 0.4.1:** export de 25,8 KB abre com `node --check`, `require()` devolve
+`['new timeline']`, e numa página separada com GSAP o `tl` em `t=0` fica em
+`translate(120.99px, 70.57px)` e em `t=0.5s` em `rotate(45deg) translate(268.48px, 159.18px)`.
+
+## Editor de easing (inline)
+
+Com uma track que tenha pelo menos duas keys:
+
+1. clique no **segmento da keyline** (a faixa entre as duas keys, na linha do parâmetro);
+2. abre o editor inline: curva azul com **dois pontos de controle**;
+3. arraste os pontos para ajustar a curva (Bézier) do trecho — o valor é salvo no `ease` da key.
+
+Verificado em 0.4.1 (clique em 250 ms → editor abre para a key de 500 ms, 7 círculos + 1 path na
+DOM). Ainda não fecha com clique fora (o código tem um `handleClickAway` comentado).
 
 ## Fluxo verificado (o que o landing page promete)
 
@@ -78,8 +130,9 @@ O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai:
 4. Arraste o elemento → o transform tool grava os parâmetros (`x`, `y`, `transformOriginX/Y`).
 5. Mova o playhead na régua (0–1250 ms) e ajuste valores para criar mais keys.
 6. Menu do topo da timeline (círculo à direita da área de controles):
-   `save file` (.am.js), `open project (.am.json)`, `save project (.am.json)`, undo, redo.
-7. No site: use o `.am.js` com `animachine-connect` (decorator React) e dispare a timeline.
+   `save file` (.am.js), `open project (.am.json)`, `save project (.am.json)`,
+   **`open animation (.am.js)`**, undo, redo.
+7. No site: carregue GSAP + o `.am.js` e toque a timeline (seção acima).
 
 ## Matriz de features do landing page
 
@@ -87,11 +140,11 @@ O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai:
 |---|---|---|
 | **In browser** | ✅ | bookmarklet (localhost) e extensão MV3 (qualquer site) |
 | **DOM picker** | ✅ | gera seletor CSS e cria track (`#card-1`) |
-| **Transform** | ⚠️ | tool renderiza e cria params+keys; valores de x/y ficaram ~0 na automação (validar com mouse real) |
-| **Ease** | ⚠️ | editor inline de easing existe na keyline; não testado |
+ | **Transform** | ✅ | tool renderiza, cria params+keys e aplica no elemento (arrasto real: `x=120.99→268.48`, rotação `0→45°`) |
+| **Ease** | ✅ | clique no segmento da keyline abre o editor inline (curva + 2 pontos); ver "Editor de easing" |
 | **Timeline** | ✅ | régua em ms, tracks, params, `currentTime` |
-| **JS export** | ✅ | `new project.am.js` (18 KB) com `projectSource` + `timelineSources`; diálogo copy/download |
-| **Save / reload** | ✅ *novo* | `new project.am.json` (3 KB); roundtrip reconstrói timeline/track/params/keys |
+| **JS export** | ✅ | `new project.am.js` (25,8 KB) válido (`node --check`), idempotente, com marcador `__ANIMACHINE_BUNDLE__`; toca com GSAP em outra página |
+| **Save / reload** | ✅ | `.am.json` (projeto) **e** `.am.js` (reabrir animação exportada) |
 
 ## Patches feitos neste clone
 
@@ -101,7 +154,10 @@ O **editor** é ferramenta de desenvolvimento e não vai para o site. O que vai:
 | `webpack.browser.config.dev.js` | aliases `spaceman`/`quick-interface`/`react-dom` + include no babel-loader |
 | `src/rocks/dom-picker/DOMPicker.jsx` | botões do picker **sempre visíveis** (antes só no hover) |
 | `src/rocks/timeline-tab/controls/Controls.jsx` | hint "click an element… press +"; botão "Create an empty track" |
-| `src/rocks/project-file/index.js` | **novo**: salvar/abrir projeto `.am.json` (toolbar) |
+| `src/rocks/project-file/index.js` | **novo**: salvar/abrir projeto `.am.json` **e abrir animação `.am.js`** (lê o marcador, não executa) |
+| `src/rocks/create-bundle-file/*` | export corrigido: bundle sem `eval`, JSON literal, marcador `__ANIMACHINE_BUNDLE__`, UMD root explícito, `_short` normalizado |
+| `src/animachine-connect/create-animation-source.js` | não muta mais o documento (rotação `_short` era acumulada a cada leitura) |
+| `webpack.bundle.config.js` + `webpack.browser.config.dev.js` | template do export sem `devtool: eval` e **excluído do babel** (babel injetava `'use strict'` e zerava o root do UMD) |
 | `src/main.js` | registra `project-file`; guard `__animachineInited` (injeção dupla é inofensiva) |
 | `extension/` + `build-extension.ps1` | **novo**: extensão MV3 com GSAP + editor embutidos |
 | `local-test/` (inclui `plain.html`, `bookmarklet.html`) | página de teste, página crua e bookmarklet |
@@ -159,8 +215,38 @@ Dois cuidados que já estão resolvidos no `background.js`:
 
 Não é preciso baixar nem copiar fontes para o projeto: elas vêm da extensão.
 
+## Correções da versão 0.4.1 (export, reabertura e easing)
+
+Três bugs do export foram diagnosticados e corrigidos:
+
+1. **Arquivo `.am.js` com sintaxe inválida.** O nome da track gerado pelo picker contém aspas
+   (`new track for "…"`); o bundle era compilado com `devtool: 'eval'` e o JSON era escapado só uma
+   vez, quebrando o `eval("…")`. Correção: template sem `eval` (`devtool: false`) e JSON injetado
+   como **literal**.
+2. **Rotações corrompidas (`_short` repetido).** `makeAllRotationShort` **mutava** os keys do
+   documento a cada leitura do `animationSource`; um projeto chegou a ter 1.733 `_short` e sequência
+   de 6.942 caracteres (bundle de 18 KB → 40 KB). Correção: transformações puras (cópias) e
+   normalização na saída (exatamente um `_short` em rotação; número no projeto).
+3. **Global do UMD não era criado no browser.** O wrapper do webpack 1 usa `this` como root, mas o
+   **babel aplicava `'use strict'` ao bundle bruto** (o require `raw!` também passa pelo loader de
+   JS) e `this` virava `undefined` — a animação existia, mas `window[projeto]` nunca era definido.
+   Correção: o diretório do bundle bruto é **excluído do babel** e o export reescreve o root para
+   `typeof self !== 'undefined' ? self : window`.
+
+Também nesta versão:
+
+* **reabrir `.am.js`** (menu → open animation): o arquivo carrega um marcador
+  `__ANIMACHINE_BUNDLE__` com projeto + timelines, lido sem executar o JS;
+* registro estável `window.__animachine[projeto][timeline]` (além do `window[projeto]` original);
+* **editor de easing** validado (clique no segmento entre keys → curva + 2 pontos de controle);
+* verificação ponta a ponta: export válido (`node --check`), `require()` devolve
+  `['new timeline']`, e numa página separada com GSAP o elemento saiu de
+  `translate(120.99px, 70.57px)` para `rotate(45deg) translate(268.48px, 159.18px)` em 500 ms;
+* reabertura no editor devolveu 1 timeline, 1 track, 5 params e as keys (x, y, rotationZ) intactas.
+
 ## Próximos passos possíveis
 
-1. Editor de ease (inline na keyline) — validar e documentar.
-2. Abrir o `.am.js` de volta além do `.am.json` (formato do bundle é JS, não JSON).
+1. Fechar o editor de easing com clique fora (o `handleClickAway` está comentado no código).
+2. Exports antigos (0.4.0 ou anteriores) não podem ser reabertos — o arquivo está sintaticamente
+   inválido; reexportar com 0.4.1+.
 3. Empacotar como script de dev (`<script>` em projeto próprio) com versionamento dos patches.

@@ -60,7 +60,7 @@ Clicking twice is harmless (the editor initializes once).
 If you just want to use the editor, grab the packaged zip from the
 [**Releases**](../../releases) page:
 
-1. download `animachine-mv3-v0.4.0.zip`;
+1. download `animachine-mv3-v0.4.1.zip`;
 2. extract it (Windows: right-click → **Extract All**). You get a folder **`animachine-mv3/`**;
 3. open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** and select that
    extracted `animachine-mv3/` folder;
@@ -69,8 +69,8 @@ If you just want to use the editor, grab the packaged zip from the
 Verify the download (optional):
 
 ```powershell
-Get-FileHash .\animachine-mv3-v0.4.0.zip -Algorithm SHA256
-# fdb0e241834904fe8e580f3f390b5b02d292b3582e88312a6d6e3063bc0ab9dc
+Get-FileHash .\animachine-mv3-v0.4.1.zip -Algorithm SHA256
+# b9ed1d5084d797185530f8eea2761282df3a040be6d0010a3bb2a80d94240d48
 ```
 
 To build a new release zip from source:
@@ -91,14 +91,63 @@ correctly on Windows, macOS and Linux.
    Edges = scale, outside the corners = rotation. `Shift` keeps proportions.
 4. Move the playhead on the ruler and edit again to create more keys (tweens).
 5. Toolbar menu (circle at the right of the timeline): `save file` (`.am.js`),
-   `save/open project` (`.am.json`), undo/redo.
-6. In your site: load GSAP + the exported `.am.js` and play the timeline
-   (`window['<project>']['<timeline>'](document.body)`), or use `animachine-connect` in React.
+   `save/open project` (`.am.json`), **`open animation (.am.js)`** (reopen an exported animation),
+   undo/redo.
+6. In your site: load GSAP + the exported `.am.js` and play the timeline (see below), or use
+   `animachine-connect` in React.
 
 If the picker cannot reach an element (iframe, Shadow DOM), use the menu entry
-**add track (css selector)** and type a selector such as `.hero h2`.
+**add track (css selector)** and type a selector such as `.hero h2` — stable selectors also survive
+HTML changes better than the generated `:nth-child(…)` paths.
 
 Full notes (setup details, troubleshooting, known issues): [`USAGE.md`](USAGE.md).
+
+## Using the exported animation (GSAP)
+
+The exported `*.am.js` is a self-contained UMD bundle: it embeds the project data plus the runtime
+that rebuilds a GSAP `TimelineMax` from the timeline tracks. It does **not** need the editor.
+
+```html
+<!-- 1) GSAP 1.x first: the bundle uses the global TimelineMax -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.20.3/TweenMax.min.js"></script>
+
+<!-- 2) the exported bundle -->
+<script src="my-project.am.js"></script>
+
+<script>
+  // 3) the project name becomes a global object with one function per timeline
+  var animations = window.__animachine['new project']   // or window['new project']
+
+  // 4) call the timeline passing the ROOT element (the selectors are resolved inside it)
+  var tl = animations['new timeline'](document.body)
+
+  // 5) normal TimelineMax controls
+  tl.pause(0)       // stop at the first frame
+  tl.play()         // play
+  tl.timeScale(2)   // double speed
+  tl.repeat(-1)     // loop forever
+  tl.time(0.5)      // seek to 500 ms
+</script>
+```
+
+How the binding works:
+
+* Each track stores a **CSS selector** captured from the page. The animation targets
+  `rootElement.querySelectorAll(selector)` — so the **same markup must exist inside `rootElement`**.
+  On another site the animation only affects elements that match those selectors; otherwise it
+  silently does nothing.
+* Selectors that start with `:scope > …` are anchored at `rootElement`'s children (the picker's
+  `:nth-child` fallback). For reusable animations prefer stable selectors (`#id`, `.class`) created
+  with **add track (css selector)**.
+* Prefer the stable registry `window.__animachine[projectName][timelineName]`; `window[projectName]`
+  is kept for the original API. With a bundler, `require('./my-project.am.js')` returns the same map.
+* React: `animachine-connect` (`react` enhancer) plays the same animations inside a component.
+
+Reopening: menu (circle) → **open animation (.am.js)** loads the project back into the editor for
+continued editing (`.am.json` remains the plain project file).
+
+**Runnable example:** [`examples/using-export/`](examples/using-export/) — an exported animation
+(`demo.am.js`) played with GSAP in a plain page (play/pause/rewind/loop buttons).
 
 ## What changed vs. upstream
 
@@ -109,13 +158,16 @@ Full notes (setup details, troubleshooting, known issues): [`USAGE.md`](USAGE.md
 | Fonts | CSS generated at runtime with `chrome-extension://` URLs and family `animachine-fa` (no page-origin 404, no site CSS conflicts) |
 | Picker | `+` button always visible, track created on `mousedown` with the picked node cached, error toast + `animachineDiag()` |
 | Selectors | `:scope > …` only as the first selector segment (fixes invalid `> :nth-child(…)` selectors) |
-| Project | `save/open project (.am.json)` (the original `.am.js` export is kept) |
-| Build | build fixes for Node 22, `npm` overrides, sibling libs fetched by `scripts/bootstrap.ps1` |
+| Export | `.am.js` export repaired: JSON injected as a literal (no `eval`), names with quotes no longer break the file, UMD global works in browsers (`window.__animachine[...]`), one `_short` suffix per rotation key (no more accumulated corruption), stable `__ANIMACHINE_BUNDLE__` marker |
+| Reopen | **open animation (.am.js)** loads the exported animation back into the editor (reads the marker, never executes the file) |
+| Easing | inline easing editor verified: click the segment between two keys in the timeline and drag the two control points |
+| Project | `save/open project (.am.json)` (plain project file) |
+| Build | build fixes for Node 22, `npm` overrides, and the raw export template excluded from babel (it was adding `'use strict'` and turning the UMD root into `undefined`); sibling libs fetched by `scripts/bootstrap.ps1` |
 | Docs | `USAGE.md` (pt-BR) with the verified workflow, troubleshooting and patch list |
 
-Not ported / still missing: the original demo scenes (`#/Robots` is absent from upstream master),
-reopening a `.am.js` (only `.am.json` is a project format), and the inline easing editor is present
-but untested.
+Not ported / still missing: the original demo scenes (`#/Robots` is absent from upstream master);
+the easing editor does not close on click-outside yet; reopening requires a `.am.js` exported with
+0.4.1+ (older, broken exports cannot be parsed).
 
 ## Build details
 
